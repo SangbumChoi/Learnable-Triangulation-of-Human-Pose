@@ -39,13 +39,31 @@ class volumetrictriangulation(torch.nn.Module):
         V_ck_view = V_ck_view.view(batch_size, n_views, *V_ck_view.shape[1:])
 
         #TO DO
+        cuboids = []
+        base_points = torch.zeros(batch_size, 3, device=device)
         coordinate = torch.zeros(batch_size, self.L, self.L, self.L, 3)
 
+        for batch_i in range(batch_size):
+            # according to paper they said they will use predicted pelvis trained by algebraic triangulation
+            if self.use_gt_pelvis:
+                keypoints_3d = batch['keypoints_3d'][batch_i]
+            else:
+                keypoints_3d = batch['pred_keypoints_3d'][batch_i]
+
+            if self.kind == "coco":
+                base_point = (keypoints_3d[11, :3] + keypoints_3d[12, :3]) / 2
+            elif self.kind == "mpii":
+                base_point = keypoints_3d[6, :3]
+
+            base_points[batch_i] = torch.from_numpy(base_point).to(device)
+
+        #TO DO
+
         # depends on the method it can be (8), (9), (10) also need to include
-        v_j_input = triangulation.create_volumetric_grid(V_ck_view, projection=homo_matrix, coordinate=coordinate, vol_confidences=vol_confidences)
+        v_k_input = triangulation.create_volumetric_grid(V_ck_view, projection=homo_matrix, coordinate=coordinate, vol_confidences=vol_confidences)
 
         # (12)
-        v_j_output = self.v2vmodel(v_j_input)
+        v_j_output = self.v2vmodel(v_k_input)
 
         batch_size, n_volumes, w, h, d = v_j_output.shape
 

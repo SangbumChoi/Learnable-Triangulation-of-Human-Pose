@@ -26,4 +26,26 @@ def algebric_2d_to_3d_heatmaps(A_j, heatmaps):
 
 # easiest way is 'sum'?
 def create_volumetric_grid(features, projection, coordinate, volume_aggregation='sum', vol_confidences=None):
+    device = 'cpu'
+    batch_size, C, J, feature_shape = features.shape[0], features.shape[1], features.shape[2], tuple(features.shape[3:])
+
+    #shaping
+    v_ck_view = torch.zeros(batch_size, J, *feature_shape, device=device)
+
+    for batch in range(batch_size):
+        for camera_view in range(C):
+            v_ck_view_axis = torch.zeros(C, J, *feature_shape, device=device)
+
+            # TO DO use projection and coordinate to make 3D reconstruction of feature map and heatmaps
+            # such as v_ck_view[batch][camera_view][:] = projection[1:3]*coordinate
+            # Projective camera P, real world reconstruction v_ck_view_axis X coordinate, and image points x (which is corresponding to feature)
+            # x = PX
+            # with all projection matrix it has camera centre and PC = 0
+            # How to handle outliered projection matrix?
+
+            if volume_aggregation == 'sum':
+                v_ck_view[batch] = v_ck_view_axis.sum(0)
+
+    return v_ck_view
+
     pass
